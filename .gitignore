@@ -1,0 +1,5 @@
+# all data
+data/*
+
+# all results
+.Rproj.user
