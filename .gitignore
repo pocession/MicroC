@@ -2,4 +2,9 @@
 data/*
 
 # all results
+Results/*
+
+# all presentations
+presentation/*
+
 .Rproj.user
