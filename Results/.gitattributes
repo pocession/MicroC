@@ -1,3 +1,0 @@
-shallow_qc filter=lfs diff=lfs merge=lfs -text
-DIR filter=lfs diff=lfs merge=lfs -text
-processing filter=lfs diff=lfs merge=lfs -text
