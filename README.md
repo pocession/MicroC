@@ -41,7 +41,7 @@ start_position_index = here::here("./Results/processing/start_position_index.txt
 output = NULL)
 ```
 
-- [annotateDIR.R](./R/annotateDIR.R): This function annotates the differentially-interacted regions (DIRs) with mm10 genome information.
+- [annotateDIR.R](./R/annotateDIR.R): This function annotates the differentially-interacted regions (DIRs) with hg38 genome information.
 
 ```
 ## Example

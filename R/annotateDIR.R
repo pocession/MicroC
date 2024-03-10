@@ -1,7 +1,7 @@
 #' annotateDIR
 #'
 #' @description
-#' This function reads differentially-interacted regions (DIRs) and annotate with mm10 information
+#' This function reads differentially-interacted regions (DIRs) and annotate with hg38 information
 #' 
 #' @author Tsunghan Hsieh
 #'
@@ -18,8 +18,8 @@
 #' @importFrom edger
 #' @importFrom assertthat assert_that
 #' @importFrom tidyr separate
-#' @importFrom TxDb.Mmusculus.UCSC.mm10.knownGene
-#' @importFrom org.Mm.eg.db
+#' @importFrom TxDb.Hsapiens.UCSC.hg38.knownGene
+#' @importFrom org.Hs.eg.db
 #' @importFrom GenomicRanges
 #' @importFrom AnnotationDbi select
 #'
@@ -67,13 +67,14 @@ annotateDIR <- function(input, output) {
   }
   
   
-  # Assign the mm10 objects ----------------------------------------------------
-  txdb <- TxDb.Mmusculus.UCSC.mm10.knownGene
+  # Assign the hg38 objects ----------------------------------------------------
+  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+  hgdb <- org.Hs.eg.db
   
   # Extract TSS positions ------------------------------------------------------
-  tss <- transcripts(TxDb.Mmusculus.UCSC.mm10.knownGene, columns=c("tx_id", "gene_id"), use.names=TRUE)
+  tss <- transcripts(txdb, columns=c("tx_id", "gene_id"), use.names=TRUE)
   tss <- resize(tss, width=1, fix='start')
-  tss_df <- as.data.frame(tss)
+  tss_df <- as.data.frame(tss, row.names = NULL)
   tss_df$transcript <- row.names(tss_df)
   colnames(tss_df) <- c("tx_chr","tx_start","tx_end","tx_width","tx_strand","tx_id","gene_id","transcript")
   
@@ -83,6 +84,7 @@ annotateDIR <- function(input, output) {
   
   annotated_df <- .get_annotated_gr(input_df)
   write.csv(annotated_df, output)
+  message("Done! The output is written in: ", output)
 }
 
 
@@ -143,7 +145,7 @@ annotateDIR <- function(input, output) {
   )
   
   # Finding overlap ------------------------------------------------------------
-  features <- transcripts(TxDb)
+  features <- transcripts(txdb)
   
   # Select the id of closet genes ----------------------------------------------
   ## nearest from peak start
@@ -186,13 +188,13 @@ annotateDIR <- function(input, output) {
     dplyr::select(-c(ix_id))
   
   ## map to the gene ids
-  mapped_genes <- select(TxDb, 
+  mapped_genes <- select(txdb, 
                          keys = final_df$tx_name, 
                          keytype = "TXNAME", 
                          columns = c("GENEID"))
   
   ## map to the gene names
-  gene_symbols <- select(org.Mm.eg.db,
+  gene_symbols <- select(hgdb,
                          keys = mapped_genes$GENEID,
                          keytype = "ENTREZID",
                          columns = c("SYMBOL"))
