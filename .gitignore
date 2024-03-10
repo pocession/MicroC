@@ -4,6 +4,9 @@ data/*
 # all results
 Results/*
 
+# all under development
+Dev/*
+
 # all presentations
 presentation/*
 

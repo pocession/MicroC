@@ -29,6 +29,24 @@ We have developed several Python and R functions for further processing microC d
 python subset_hic_data.py --inputDir ./data/input.hiC ./Results/output.csv --outputDir --startChr chr2 --endChr chr2 --startPosStartChr 112735986 --endPosStartChr 113204585 --startPosEndChr 112735986 --endPosEndChr 112735986 --res 5000
 ```
 
-- [differential_interacted_region_analysis.Rmd](): This notebook illustrates how we use [getDIR.R]() and [annotateDIR.R]() to identify the differentially-interacted regions (DIRs) between the stimulated and the control conditions.
+- [getDIRWithNoReplicate.R](./R/getDIRWithNoReplicate.R): After running subset_hic_data.py, run this function to read interaction counts and perform differential analysis between two conditions. Please note this function is specifically for experiments with no biological replicate, so the result has no statistical significance. Please treat the log2 fold change and p value as descriptive values.
 
+```
+## Example
+df <- GetDIRWithNoReplicate(
+chr = "chr2",
+treat = here::here("./Results/processing/44112_A_bg_43615_mc6contact_map_extracted.csv"),
+ctrl = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_extracted.csv"),
+start_position_index = here::here("./Results/processing/start_position_index.txt"),
+output = NULL)
+```
+
+- [annotateDIR.R](./R/annotateDIR.R) to annotate the differentially-interacted regions (DIRs) with mm10 genome information.
+
+```
+## Example
+df <- annotateDIR(
+input = here::here("./Results/DIR/DIR_44112_A_bg_43615_mc6contact_map_extracted.csv"),
+output = NULL)
+```
 
