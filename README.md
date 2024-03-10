@@ -19,7 +19,7 @@ For a step-by-step guide, please refer to [Dovetail analsyis documents](https://
 
 In [our bash repository](./Bash), you can find example bash scripts for the pre-processing step in high-performance computation (HPC) cluster.
 
-## Other tools in this repository
+## Homebrew tools in this repository
 We have developed several Python and R functions for further processing microC data and the downstream analysis.
 
 - [subset_hic_data.py](./Python/subset_hic_data.py): This function helps subset the interested regions from hic file for further downstream analysis.
