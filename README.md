@@ -29,6 +29,19 @@ We have developed several Python and R functions for further processing microC d
 python subset_hic_data.py --inputDir ./data/input.hiC ./Results/output.csv --outputDir --startChr chr2 --endChr chr2 --startPosStartChr 112735986 --endPosStartChr 113204585 --startPosEndChr 112735986 --endPosEndChr 112735986 --res 5000
 ```
 
+- [getInteractionPosIndex.R](./R/getInteractionPosIndex.R): After running subset_hic_data.py, run this function to generate the interaction position index. The position index is the mid-point of the genomic regions. For example, if there is a interaction between two genomic regions: 11000-16000 and 18000-23000, then the index will be 13500 - 20500.
+
+```
+## Example:
+df <- getInteractionPosIndex(
+chr = "chr2",
+start = 112735986,
+end = 113204585,
+res = 5000,
+output = here::here("./Results/processing/start_position_index.txt")
+)
+```
+
 - [getDIRWithNoReplicate.R](./R/getDIRWithNoReplicate.R): After running subset_hic_data.py, run this function to read interaction counts and perform differential analysis between two conditions. Please note this function is specifically for experiments with no biological replicate, so the result has no statistical significance. Please treat the log2 fold change and p value as descriptive values.
 
 ```

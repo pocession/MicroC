@@ -1,9 +1,10 @@
-#' GetInteractionPosIndex
+#' getInteractionPosIndex
 #'
 #' @description
 #' This function generates the position index for the interested genomic segment and write into a .txt file.
 #' The position index is the mid-point of the genomic regions
 #' For example, if there is a interaction between two genomic regions: 11000-16000 and 18000-23000
+#' Then the index will be 13500 - 20500
 #' 
 #' @author Tsunghan Hsieh
 #'
@@ -24,7 +25,7 @@
 #'
 #' @examples
 #' \dontrun{
-#' df <- GetInteractionPosIndex(
+#' df <- getInteractionPosIndex(
 #' chr = "chr2",
 #' start = 112735986,
 #' end = 113204585,
@@ -33,7 +34,7 @@
 #' )
 #' }
 
-GetInteractionPosIndex <- function(chr, start, end, res) {
+getInteractionPosIndex <- function(chr, start, end, res) {
   
   # check input ----------------------------------------------------------------
   
