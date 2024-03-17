@@ -3,6 +3,7 @@ This repository is a resource and a toolbox for microC-seq analysis.
 
 ## About MicroC
 Please read the [original paper](https://www.sciencedirect.com/science/article/pii/S0092867415006388) for the principle and details.
+- PS: My name is as same as the first author of this paper, but I have nothing to do with this paper.
 
 MicroC is a sequencing technology that captures the genomic interaction in high resolution. In theory, the resolution could reach to single nucleosome (~150 base pair). In practice, the resolution usually ranges within 1000 - 5000 bp.
 
