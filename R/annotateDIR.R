@@ -15,7 +15,6 @@
 #' @export
 #'
 #' @importFrom here here
-#' @importFrom edger
 #' @importFrom assertthat assert_that
 #' @importFrom tidyr separate
 #' @importFrom TxDb.Hsapiens.UCSC.hg38.knownGene
@@ -68,7 +67,7 @@ annotateDIR <- function(input, output) {
   
   
   # Assign the hg38 objects ----------------------------------------------------
-  txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
+  .GlobalEnv$txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
   hgdb <- org.Hs.eg.db
   
   # Extract TSS positions ------------------------------------------------------
@@ -106,7 +105,7 @@ annotateDIR <- function(input, output) {
 .get_annotated_gr <- function(df) {
   
   # Check colnames -------------------------------------------------------------
-  essential_col <- c("chr", "start", "end")
+  essential_col <- c("chr", "region1", "region2")
   for (i in 1:length(essential_col)) {
     if (!essential_col[i] %in% colnames(df)) {
       message("Please make sure you have the following column: ", essential_col[i])
@@ -120,28 +119,36 @@ annotateDIR <- function(input, output) {
   wanted <- c(wanted, "chrX", "chrY")
   df <- df |>
     dplyr::filter(chr %in% wanted) |>
-    dplyr::mutate(start = as.numeric(start),
-                  end = as.numeric(end)) |>
-    dplyr::mutate(ix_id = paste0(chr, "_", start, "_", end))
+    dplyr::mutate(region1 = as.numeric(region1),
+                  region2 = as.numeric(region2)) |>
+    dplyr::mutate(ix_id = paste0(chr, "_", region1, "_", region2))
   
-  # Seperate the interaction counts into two data frame ------------------------
-  ## As the interaction is built from i-j as well as j-i interaction
-  ## So i-j interaction = j-i interaction
-  ## Therefore we have to reverse the start ane end position for j-i interaction
+  # Annotate the region1 and region2 seperately --------------------------------
   ## For creating GRange objects
   ## The ix_id column is used as the identity column
   
-  df_reversed <- df |>
-    dplyr::mutate(start_end_distance = end - start) |>
-    dplyr::mutate(start_reversed = ifelse(start_end_distance >= 0, start, end),
-                  end_reversed = ifelse(start_end_distance < 0, start, end)) |>
-    dplyr::select(chr, start_reversed, end_reversed, ix_id)
+  df1 <- df |>
+    dplyr::select(chr, region1, ix_id) |>
+    dplyr::mutate(start = region1,
+                  end = region1+1)
+  
+  df2 <- df |>
+    dplyr::select(chr, region2, ix_id) |>
+    dplyr::mutate(start = region2,
+                  end = region2+1)
+
   
   # Create GRange objects ------------------------------------------------------
-  gr <- GRanges(
-    seqnames = df_reversed$chr,
-    ranges = IRanges(start = df_reversed$start_reversed, end = df_reversed$end_reversed),
-    ix_id = df_reversed$ix_id
+  gr1 <- GRanges(
+    seqnames = df1$chr,
+    ranges = IRanges(start = df1$start, end = df1$end),
+    ix_id = df1$ix_id
+  )
+  
+  gr2 <- GRanges(
+    seqnames = df2$chr,
+    ranges = IRanges(start = df2$start, end = df2$end),
+    ix_id = df2$ix_id
   )
   
   # Finding overlap ------------------------------------------------------------
@@ -149,58 +156,86 @@ annotateDIR <- function(input, output) {
   
   # Select the id of closet genes ----------------------------------------------
   ## nearest from peak start
-  ps.idx <- follow(gr, features)
+  ps.idx1 <- follow(gr1, features)
+  ps.idx2 <- follow(gr2, features)
   
   ## nearest from peak end
-  pe.idx <- precede(gr, features)
+  pe.idx1 <- precede(gr1, features)
+  pe.idx2 <- precede(gr2, features)
   
   ## check if any peak not matched to the nearest gene
-  na.idx <- is.na(ps.idx) & is.na(pe.idx)
+  na.idx1 <- is.na(ps.idx1) & is.na(pe.idx1)
+  na.idx2 <- is.na(ps.idx2) & is.na(pe.idx2)
   
   ## Remove na 
-  if (sum(na.idx) > 0) { ## suggested by Thomas Schwarzl
-    ps.idx <- ps.idx[!na.idx]
-    pe.idx <- pe.idx[!na.idx]
-    gr <- gr[!na.idx]
+  if (sum(na.idx1) > 0) { ## suggested by Thomas Schwarzl
+    ps.idx1 <- ps.idx1[!na.idx1]
+    pe.idx1 <- pe.idx1[!na.idx1]
+    gr1 <- gr1[!na.idx1]
+  }
+  
+  if (sum(na.idx2) > 0) { ## suggested by Thomas Schwarzl
+    ps.idx2 <- ps.idx2[!na.idx2]
+    pe.idx2 <- pe.idx2[!na.idx2]
+    gr2 <- gr2[!na.idx2]
   }
   
   # Generate the final data frame ----------------------------------------------
   ## Identify the closet gene information
-  features_df <- data.frame(txStart = start(features[ps.idx]),
-                            txEnd = end(features[pe.idx]),
-                            txStrand = strand(features[ps.idx]),
-                            tx_id = features[ps.idx]$tx_id,
-                            tx_name = features[ps.idx]$tx_name)
+  features_df1 <- data.frame(txStart1 = start(features[ps.idx1]),
+                            txEnd1 = end(features[pe.idx1]),
+                            txStrand1 = strand(features[ps.idx1]),
+                            tx_id1 = features[ps.idx1]$tx_id,
+                            tx_name1 = features[ps.idx1]$tx_name)
   
-  features_df <- features_df |> 
-    dplyr::mutate(distanceToTSS = ifelse(txStrand == "+", txEnd - txStart, txStart - txEnd))
+  features_df2 <- data.frame(txStart2 = start(features[ps.idx2]),
+                             txEnd2 = end(features[pe.idx2]),
+                             txStrand2 = strand(features[ps.idx2]),
+                             tx_id2 = features[ps.idx2]$tx_id,
+                             tx_name2 = features[ps.idx2]$tx_name)
   
-  gr_df <- as.data.frame(gr)
-  annotated_df <- cbind(gr_df, features_df)
-  annotated_df <- annotated_df[,6:ncol(annotated_df)]
+  features_df1 <- features_df1 |> 
+    dplyr::mutate(distanceToTSS1 = ifelse(txStrand1 == "+", txEnd1 - txStart1, txStart1 - txEnd1))
   
-  annotated_reversed_df <- df_reversed |>
-    dplyr::select(ix_id) |>
-    dplyr::left_join(annotated_df, by = "ix_id")
+  features_df2 <- features_df2 |> 
+    dplyr::mutate(distanceToTSS2 = ifelse(txStrand2 == "+", txEnd2 - txStart2, txStart2 - txEnd2))
   
-  final_df <- df |>
-    dplyr::left_join(annotated_reversed_df, by = "ix_id") |>
-    dplyr::select(-c(ix_id))
+  gr_df1 <- as.data.frame(gr1)
+  annotated_df1 <- cbind(gr_df1, features_df1)
+  annotated_df1 <- annotated_df1[,6:ncol(annotated_df1)]
+  
+  gr_df2 <- as.data.frame(gr2)
+  annotated_df2 <- cbind(gr_df2, features_df2)
+  annotated_df2 <- annotated_df2[,6:ncol(annotated_df2)]
+  
   
   ## map to the gene ids
-  mapped_genes <- select(txdb, 
-                         keys = final_df$tx_name, 
+  mapped_genes1 <- select(txdb, 
+                         keys = annotated_df1$tx_name, 
                          keytype = "TXNAME", 
                          columns = c("GENEID"))
   
-  ## map to the gene names
-  gene_symbols <- select(hgdb,
-                         keys = mapped_genes$GENEID,
-                         keytype = "ENTREZID",
-                         columns = c("SYMBOL"))
-  gene_symbols <- cbind(gene_symbols, mapped_genes)
+  mapped_genes2 <- select(txdb, 
+                          keys = annotated_df2$tx_name, 
+                          keytype = "TXNAME", 
+                          columns = c("GENEID"))
   
-  final_df <- cbind(final_df, gene_symbols)
+  annotated_df1 <- cbind(annotated_df1, mapped_genes1)
+  annotated_df1 <- annotated_df1 |>
+    dplyr::mutate(gene_id1 = GENEID) |>
+    dplyr::select(-c(TXNAME, GENEID))
+  
+  annotated_df2 <- cbind(annotated_df2, mapped_genes2)
+  annotated_df2 <- annotated_df2 |>
+    dplyr::mutate(gene_id2 = GENEID) |>
+    dplyr::select(-c(TXNAME, GENEID))
+  
+  annotated_df <- annotated_df1 |>
+    dplyr::left_join(annotated_df2, by = "ix_id")
+  
+  final_df <- df |>
+    dplyr::left_join(annotated_df, by = "ix_id") |>
+    dplyr::select(-c(ix_id))
   
   return(final_df)
 }

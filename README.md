@@ -50,6 +50,7 @@ df <- GetDIRWithNoReplicate(
 chr = "chr2",
 treat = here::here("./Results/processing/44112_A_bg_43615_mc6contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_extracted.csv"),
+bcv = 0.4,
 start_position_index = here::here("./Results/processing/start_position_index.txt"),
 output = NULL)
 ```
