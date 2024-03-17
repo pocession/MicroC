@@ -12,3 +12,5 @@ presentation/*
 
 .Rproj.user
 .DS_Store
+.Rhistory
+*.Rproj
