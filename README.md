@@ -20,17 +20,25 @@ For a step-by-step guide, please refer to [Dovetail analsyis documents](https://
 
 In [our bash repository](./Bash), you can find example bash scripts for the pre-processing step in high-performance computation (HPC) cluster.
 
-## Homebrew tools in this repository
-We have developed several Python and R functions for further processing microC data and the downstream analysis.
+## Usages of our homebrew tools in this repository
+We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. Then navigate to this folder and you are ready to go.
 
-- [subset_hic_data.py](./Python/subset_hic_data.py): This function helps subset the interested regions from hic file for further downstream analysis.
+```
+## In linux environment
+unzip MicroC.zip -d -path-to-this-folder
+cd -path-to-this-folder
+```
+
+Example commands for our homebrew tools:
+
+- [subset_hic_data.py](./Python/subset_hic_data.py): This function helps to subset the interested regions from hic file and generate the position index for further downstream analysis. Note the position index is the mid-point of the genomic regions. For example, if there is a interaction between two genomic regions: 11000-16000 and 18000-23000, then the index will be 13500 - 20500.
 
 ```
 ## Example
-python subset_hic_data.py --inputDir ./data/input.hiC ./Results/output.csv --outputDir --startChr chr2 --endChr chr2 --startPosStartChr 112735986 --endPosStartChr 113204585 --startPosEndChr 112735986 --endPosEndChr 112735986 --res 5000
+python ./Python/subset_hic_data.py --inputDir /data/44114_C_lps_43617_mc8contact_map.hic --outputDir /Results/processing/ --rowChr chr2 --columnChr chr2 --rowStart 112735986 --rowEnd 113204585 --columnStart 112735986 --columnEnd 112735986 --res 5000
 ```
 
-- [getInteractionPosIndex.R](./R/getInteractionPosIndex.R): After running subset_hic_data.py, run this function to generate the interaction position index. The position index is the mid-point of the genomic regions. For example, if there is a interaction between two genomic regions: 11000-16000 and 18000-23000, then the index will be 13500 - 20500.
+- [getInteractionPosIndex.R](./R/getInteractionPosIndex.R): This function is an independent R function for generating the interaction position index.
 
 ```
 ## Example:
