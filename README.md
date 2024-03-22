@@ -20,8 +20,8 @@ For a step-by-step guide, please refer to [Dovetail analsyis documents](https://
 
 In [our bash repository](./Bash), you can find example bash scripts for the pre-processing step in high-performance computation (HPC) cluster.
 
-## Usages of our homebrew tools in this repository
-We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. Then navigate to this folder and you are ready to go.
+## Usage of our homebrew tools in this repository
+We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. Then navigate to this folder and you are ready to go. to use R functions, please open this folder as a project in your R studio.
 
 ```
 ## In linux environment
@@ -35,7 +35,7 @@ Example commands for our homebrew tools:
 
 ```
 ## Example
-python ./Python/subset_hic_data.py --inputDir /data/44114_C_lps_43617_mc8contact_map.hic --outputDir /Results/processing/ --rowChr chr2 --columnChr chr2 --rowStart 112735986 --rowEnd 113204585 --columnStart 112735986 --columnEnd 112735986 --res 5000
+python ./Python/subset_hic_data.py --inputDir /data/44111_A_ctrl_43614_mc5contact_map.hic --outputDir /Results/processing/ --rowChr chr2 --columnChr chr2 --rowStart 112735986 --rowEnd 113204585 --columnStart 112735986 --columnEnd 113204585 --res 5000
 ```
 
 - [getInteractionPosIndex.R](./R/getInteractionPosIndex.R): This function is an independent R function for generating the interaction position index.

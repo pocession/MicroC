@@ -7,7 +7,7 @@ import argparse
 def parse_arguments():
     """
     Parse command line arguments.
-    python ./Python/subset_hic_data.py --inputDir /data/44114_C_lps_43617_mc8contact_map.hic --outputDir /Results/processing/ --rowChr chr2 --columnChr chr2 --rowStart 112735986 --rowEnd 113204585 --columnStart 112735986 --columnEnd 112735986 --res 5000
+    python ./Python/subset_hic_data.py --inputDir /data/44113_C_ctrl_43616_mc7contact_map.hic --outputDir /Results/processing/ --rowChr chr2 --columnChr chr2 --rowStart 112735986 --rowEnd 113204585 --columnStart 112735986 --columnEnd 113204585 --res 5000
     """
     parser = argparse.ArgumentParser(description='Subset HiC Data.')
     parser.add_argument('--inputDir', type=str, required=True, help='the path and name of input hic file')

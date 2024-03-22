@@ -1,0 +1,12 @@
+Package: MicroC
+Type: Package
+Title: MicroC
+Version: 0.0.1
+Author: Tsunghan Hsieh
+Maintainer: Tsunghan Hsieh <tsung-han@mhlangalab.org>
+Description: tba
+License: ?
+Encoding: UTF-8
+LazyData: true
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.2.3
