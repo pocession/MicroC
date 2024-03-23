@@ -20,13 +20,27 @@ For a step-by-step guide, please refer to [Dovetail analsyis documents](https://
 
 In [our bash repository](./Bash), you can find example bash scripts for the pre-processing step in high-performance computation (HPC) cluster.
 
+## Analysis pipeline
+We have developed a pipeline that identifies the differentially-interacted regions (DIRs) between two samples. As microC is an expensive assay, we don't do biological repeat for each condition. Instead, we set the biological covariance (BCV) as 0.4 to get the DIRs. Moreover, we also leverage our healthy donor data to generate a "black list". You could choose to remove DIRs in black list from experiments to get a more validated DIRs set. For more details, please see [this file](./Doc/Il1B_DIR_identification.Rmd).
+
+![workflow](./workflow.png)
+
 ## Usage of our homebrew tools in this repository
-We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. Then navigate to this folder and you are ready to go. to use R functions, please open this folder as a project in your R studio.
+We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. Then navigate to this folder and you are ready to use Python functions. To use R functions, please open this folder as a project in your R studio and load all functions in your R environment.
 
 ```
+## Use Python functions
 ## In linux environment
-unzip MicroC.zip -d -path-to-this-folder
-cd -path-to-this-folder
+unzip MicroC.zip -d path-to-this-folder
+cd path-to-this-folder
+```
+
+```
+## Use R functions
+## In R studio
+
+devtools::document()
+devtools::load_all()
 ```
 
 Example commands for our homebrew tools:

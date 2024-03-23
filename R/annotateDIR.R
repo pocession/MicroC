@@ -84,6 +84,7 @@ annotateDIR <- function(input, output) {
   annotated_df <- .get_annotated_gr(input_df)
   write.csv(annotated_df, output)
   message("Done! The output is written in: ", output)
+  return(annotated_df)
 }
 
 
@@ -104,7 +105,7 @@ annotateDIR <- function(input, output) {
 #' }
 .get_annotated_gr <- function(df) {
   
-  # Check colnames -------------------------------------------------------------
+  # Check colnames -------------------------------------------------------------\
   essential_col <- c("chr", "region1", "region2")
   for (i in 1:length(essential_col)) {
     if (!essential_col[i] %in% colnames(df)) {
@@ -209,26 +210,39 @@ annotateDIR <- function(input, output) {
   annotated_df2 <- annotated_df2[,6:ncol(annotated_df2)]
   
   
-  ## map to the gene ids
-  mapped_genes1 <- select(txdb, 
-                         keys = annotated_df1$tx_name, 
-                         keytype = "TXNAME", 
-                         columns = c("GENEID"))
+  ## map to the gene ids and symbols
+  mapped_genes1 <- AnnotationDbi::select(txdb, 
+                                         keys = annotated_df1$tx_name, 
+                                         keytype = "TXNAME", 
+                                         columns = c("GENEID"))
   
-  mapped_genes2 <- select(txdb, 
-                          keys = annotated_df2$tx_name, 
-                          keytype = "TXNAME", 
-                          columns = c("GENEID"))
+  mapped_symbols1 <- AnnotationDbi::select(org.Hs.eg.db, 
+                                           keys = mapped_genes1$GENEID,
+                                           columns = "SYMBOL", 
+                                           keytype = "ENTREZID")
   
-  annotated_df1 <- cbind(annotated_df1, mapped_genes1)
+  ## map to the gene ids and symbols
+  mapped_genes2 <- AnnotationDbi::select(txdb, 
+                                         keys = annotated_df2$tx_name, 
+                                         keytype = "TXNAME", 
+                                         columns = c("GENEID"))
+  
+  mapped_symbols2 <- AnnotationDbi::select(org.Hs.eg.db, 
+                                           keys = mapped_genes2$GENEID,
+                                           columns = "SYMBOL", 
+                                           keytype = "ENTREZID")
+  
+  annotated_df1 <- cbind(annotated_df1, mapped_genes1, mapped_symbols1)
   annotated_df1 <- annotated_df1 |>
-    dplyr::mutate(gene_id1 = GENEID) |>
-    dplyr::select(-c(TXNAME, GENEID))
+    dplyr::mutate(gene_id1 = GENEID,
+                  symbol_1 = SYMBOL) |>
+    dplyr::select(-c(TXNAME, GENEID, SYMBOL, ENTREZID))
   
-  annotated_df2 <- cbind(annotated_df2, mapped_genes2)
+  annotated_df2 <- cbind(annotated_df2, mapped_genes2, mapped_symbols2)
   annotated_df2 <- annotated_df2 |>
-    dplyr::mutate(gene_id2 = GENEID) |>
-    dplyr::select(-c(TXNAME, GENEID))
+    dplyr::mutate(gene_id2 = GENEID,
+                  symbol_2 = SYMBOL) |>
+    dplyr::select(-c(TXNAME, GENEID, SYMBOL, ENTREZID))
   
   annotated_df <- annotated_df1 |>
     dplyr::left_join(annotated_df2, by = "ix_id")

@@ -25,6 +25,11 @@ devtools::load_all()
 ***
 ```{r library}
 library(edgeR)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(org.Hs.eg.db)
+library(GenomicRanges)
+library(GenomicFeatures)
+library(AnnotationDbi)
 ```
 
 # Set path
@@ -56,10 +61,11 @@ posfiles <- list.files(path = inputDir, pattern = "_map_PosIndex\\.txt$", full.n
 ***
 We will generate a series of DIR files. The first one is the differential analysis among cells from two healthy donors and this file will be used as a "black list" to filter out the individual-specific interacted regions. Other DIR files are human cells treated with microbial molecules vs untreated. Note we have no biological replicate for all experiment, therefore we assume biological covariance = 0.4 for the differential analysis.
 
-## Healthy donors
+## DIR dataframe
 ***
 
-```{r healthy}
+```{r DIR}
+## Healthy donors
 df_healthy <- GetDIRWithNoReplicate(
 chr = "chr2",
 treat = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_extracted.csv"),
@@ -68,12 +74,8 @@ bcv = 0.4,
 start_position_index = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/healthy.csv")
 )
-```
 
-## Other stimulating agents
-***
-
-```{r stimulating}
+## Stimulation
 df_bg <- GetDIRWithNoReplicate(
 chr = "chr2",
 treat = here::here("./Results/processing/44112_A_bg_43615_mc6contact_map_extracted.csv"),
@@ -118,6 +120,26 @@ bcv = 0.4,
 start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bcgldhi.csv")
 )
+```
+## Annotate the DIR
+***
+```{r annotation}
+
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+  treat <- "healthy"
+  input = here::here(paste0("./Results/DIR/", treat, ".csv"))
+  output = here::here(paste0("./Results/DIR/annotated_", treat, ".csv"))
+  df <- annotateDIR(
+    input = input,
+    output = output
+  )
+}
+
+annotated_healthy_df <- annoted_df_list[["healthy"]]
+annotated_bg_df <- annoted_df_list[["bg"]]
+annotated_lps_df <- annoted_df_list[["lps"]]
+annotated_bcg_df <- annoted_df_list[["bcg"]]
+
 ```
 
 # Filter out the individual-specific DIRs
