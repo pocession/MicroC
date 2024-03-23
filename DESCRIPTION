@@ -2,9 +2,9 @@ Package: MicroC
 Type: Package
 Title: MicroC
 Version: 0.0.1
-Author: Tsunghan Hsieh
+Author: Tsunghan Hsieh & Winsen Wijaya
 Maintainer: Tsunghan Hsieh <tsung-han@mhlangalab.org>
-Description: tba
+Description: Homebrew functions for MicroC (high-resolution HiC) data analysis
 License: ?
 Encoding: UTF-8
 LazyData: true
