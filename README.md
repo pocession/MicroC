@@ -41,6 +41,13 @@ cd path-to-this-folder
 
 devtools::document()
 devtools::load_all()
+
+library(edgeR)
+library(TxDb.Hsapiens.UCSC.hg38.knownGene)
+library(org.Hs.eg.db)
+library(GenomicRanges)
+library(GenomicFeatures)
+library(AnnotationDbi)
 ```
 
 Example commands for our homebrew tools:
