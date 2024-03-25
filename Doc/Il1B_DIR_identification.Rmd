@@ -124,29 +124,32 @@ output = here::here("./Results/DIR/bcgldhi.csv")
 ## Annotate the DIR
 ***
 ```{r annotation}
-
+annoted_df_list <- list()
 for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
-  treat <- "healthy"
   input = here::here(paste0("./Results/DIR/", treat, ".csv"))
   output = here::here(paste0("./Results/DIR/annotated_", treat, ".csv"))
-  df <- annotateDIR(
+  annoted_df_list[[treat]] <- annotateDIR(
     input = input,
     output = output
   )
 }
-
-annotated_healthy_df <- annoted_df_list[["healthy"]]
-annotated_bg_df <- annoted_df_list[["bg"]]
-annotated_lps_df <- annoted_df_list[["lps"]]
-annotated_bcg_df <- annoted_df_list[["bcg"]]
-
 ```
 
-# Filter out the individual-specific DIRs
+# (Optional) Filter out the individual-specific DIRs
 ***
 
 ```{r filter_blacklist}
 ## looks like only a small fraction are individual-specific
-df_blacklist <- df_healthy |>
-  dplyr::filter(PValue < 0.05)
+df_blacklist <- annoted_df_list[["healthy"]] |>
+  dplyr::filter(PValue < 0.1) |>
+  dplyr::mutate(ixid = paste0(region1, "-", region2))
+
+filtered_annoted_df_list <- list()
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+  filtered_annoted_df_list[[treat]] <- annoted_df_list[[treat]] |>
+    dplyr::mutate(ixid = paste0(region1, "-", region2)) |>
+    dplyr::filter(!ixid %in% df_blacklist$ixid)
+  write.csv(filtered_annoted_df_list[[treat]],
+            here::here(paste0("./Results/DIR/filtered_annotated_", treat, ".csv")))
+}
 ```
