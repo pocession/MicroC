@@ -144,6 +144,8 @@ df_blacklist <- annoted_df_list[["healthy"]] |>
   dplyr::filter(PValue < 0.1) |>
   dplyr::mutate(ixid = paste0(region1, "-", region2))
 
+write.csv(df_blacklist, here::here("./Results/DIR/annotated_blacklist.csv"))
+
 filtered_annoted_df_list <- list()
 for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
   filtered_annoted_df_list[[treat]] <- annoted_df_list[[treat]] |>
