@@ -155,3 +155,40 @@ for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
             here::here(paste0("./Results/DIR/filtered_annotated_", treat, ".csv")))
 }
 ```
+
+# Identify DIRs
+***
+```{r dir_summary}
+DIR_df <- list()
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+  DIR_df[[treat]] <- annoted_df_list[[treat]] |>
+    dplyr::filter(PValue < 0.05)
+  write.csv(DIR_df[[treat]],
+            here::here(paste0("./Results/DIR/annotated_DIR_", treat, ".csv")))
+}
+```
+
+# Identify the interaction between IL-1B and IL-37
+***
+Musa is interested in the interaction between IL-1B and IL-37. Therefore we filtered out DIRs from these two regions. 
+```{r il1b-il37}
+# IL1b: chr2:112,829,751-112,836,779 
+# IL37: chr2:112,911,165-112,918,882
+
+# The data is diagonal symmetric, there we just need to check one gene in each region
+resolution <- 5000
+il1b_upstream <- 112829751 - 5000
+il1b_downstream <- 112836779 + 5000 
+il37_upstream <- 112911165 - 5000
+il37_downstream <- 112918882 + 5000
+filtered_annotated_il1bil37_df_list <- list()
+
+## filtered out by black list does not chane the result
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+  filtered_annotated_il1bil37_df_list[[treat]] <- filtered_annoted_df_list[[treat]] |>
+    dplyr::filter((region1 - resolution/2) > il1b_upstream & (region1 + resolution/2) < il1b_downstream) |>
+    dplyr::filter((region2 - resolution/2) > il37_upstream & (region2 + resolution/2) < il37_downstream)
+  write.csv( filtered_annotated_il1bil37_df_list[[treat]],
+            here::here(paste0("./Results/DIR/filtered_annotated_il1bil37_", treat, ".csv")))
+}
+```
