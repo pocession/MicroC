@@ -203,7 +203,8 @@ for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
 ***
 ```{r dir_summary}
 DIR_df <- list()
-for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
+                "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
   DIR_df[[treat]] <- annoted_df_list[[treat]] |>
     dplyr::filter(PValue < 0.05)
   write.csv(DIR_df[[treat]],
@@ -227,7 +228,8 @@ il37_downstream <- 112918882 + 5000
 filtered_annotated_il1bil37_df_list <- list()
 
 ## filtered out by black list does not chane the result
-for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
+                "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
   filtered_annotated_il1bil37_df_list[[treat]] <- filtered_annoted_df_list[[treat]] |>
     dplyr::filter((region1 - resolution/2) > il1b_upstream & (region1 + resolution/2) < il1b_downstream) |>
     dplyr::filter((region2 - resolution/2) > il37_upstream & (region2 + resolution/2) < il37_downstream)
