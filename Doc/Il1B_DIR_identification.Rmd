@@ -120,12 +120,53 @@ bcv = 0.4,
 start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bcgldhi.csv")
 )
+
+## DIR across different stimulation conditions
+## Xiaolin exp
+df_bcgldhi_bcg <- GetDIRWithNoReplicate(
+chr = "chr2",
+treat = here::here("./Results/processing/BCGLDHi_contact_map_extracted.csv"),
+ctrl = here::here("./Results/processing/BCG_contact_map_extracted.csv"),
+bcv = 0.4,
+start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
+output = here::here("./Results/DIR/bcgldhi_bcg.csv")
+)
+
+df_bcgldhi_ldhi <- GetDIRWithNoReplicate(
+chr = "chr2",
+treat = here::here("./Results/processing/BCGLDHi_contact_map_extracted.csv"),
+ctrl = here::here("./Results/processing/LDHi_contact_map_extracted.csv"),
+bcv = 0.4,
+start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
+output = here::here("./Results/DIR/bcgldhi_ldhi.csv")
+)
+
+df_bcg_ldhi <- GetDIRWithNoReplicate(
+chr = "chr2",
+treat = here::here("./Results/processing/BCG_contact_map_extracted.csv"),
+ctrl = here::here("./Results/processing/LDHi_contact_map_extracted.csv"),
+bcv = 0.4,
+start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
+output = here::here("./Results/DIR/bcg_ldhi.csv")
+)
+
+## Me and Winsen
+df_bg_lps <- GetDIRWithNoReplicate(
+chr = "chr2",
+treat = here::here("./Results/processing/44112_A_bg_43615_mc6contact_map_extracted.csv"),
+ctrl = here::here("./Results/processing/44114_C_lps_43617_mc8contact_map_extracted.csv"),
+bcv = 0.4,
+start_position_index = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_PosIndex.txt"),
+output = here::here("./Results/DIR/bg_lps.csv")
+)
+
 ```
 ## Annotate the DIR
 ***
 ```{r annotation}
 annoted_df_list <- list()
-for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
+                "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
   input = here::here(paste0("./Results/DIR/", treat, ".csv"))
   output = here::here(paste0("./Results/DIR/annotated_", treat, ".csv"))
   annoted_df_list[[treat]] <- annotateDIR(
@@ -147,13 +188,15 @@ df_blacklist <- annoted_df_list[["healthy"]] |>
 write.csv(df_blacklist, here::here("./Results/DIR/annotated_blacklist.csv"))
 
 filtered_annoted_df_list <- list()
-for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi")) {
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
+                "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
   filtered_annoted_df_list[[treat]] <- annoted_df_list[[treat]] |>
     dplyr::mutate(ixid = paste0(region1, "-", region2)) |>
     dplyr::filter(!ixid %in% df_blacklist$ixid)
   write.csv(filtered_annoted_df_list[[treat]],
             here::here(paste0("./Results/DIR/filtered_annotated_", treat, ".csv")))
 }
+
 ```
 
 # Identify DIRs
