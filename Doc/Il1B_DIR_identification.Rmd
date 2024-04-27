@@ -214,7 +214,22 @@ for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
 
 # Identify the interaction between IL-1B and IL-37
 ***
-Musa is interested in the interaction between IL-1B and IL-37. Therefore we filtered out DIRs from these two regions. 
+Musa is interested in the interaction between IL-1B and IL-37. Therefore we filtered out DIRs from these two regions. We will also arrange the dataframe into bed files, so that we can upload it to UCSC genome browser.
+
+Here are the columns for the BED file format. Note there should be no header in the BED file.
+
+1. chrom - The name of the chromosome (e.g. chr3, chrY, chr2_random) or scaffold (e.g. scaffold10671).
+2. chromStart - The starting position of the feature in the chromosome or scaffold. The first base in a chromosome is numbered 0.
+3. chromEnd - The ending position of the feature in the chromosome or scaffold. 
+
+The 9 additional optional BED fields are:
+
+4. name - Defines the name of the BED line. This label is displayed to the left of the BED line in the Genome Browser window when the track is open to full display mode or directly to the left of the item in pack mode.
+5. score - A score between 0 and 1000. If the track line useScore attribute is set to 1 for this annotation data set, the score value will determine the level of gray in which this feature is displayed (higher numbers = darker gray). This table shows the Genome Browser's translation of BED score values into shades of gray.
+6. strand - Defines the strand. Either "." (=no strand) or "+" or "-".
+
+7 - 10 are not relevant to this project.
+
 ```{r il1b-il37}
 # IL1b: chr2:112,829,751-112,836,779 
 # IL37: chr2:112,911,165-112,918,882
@@ -236,4 +251,23 @@ for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
   write.csv( filtered_annotated_il1bil37_df_list[[treat]],
             here::here(paste0("./Results/DIR/filtered_annotated_il1bil37_", treat, ".csv")))
 }
+
+
+## Arrange the dataframe to bed format
+filtered_annotated_il1bil37_bed_list <- list()
+for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
+                "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
+  df <- read.csv(
+    here::here(paste0("./Results/DIR/filtered_annotated_il1bil37_", treat, ".csv")))
+  df <- df[,2:ncol(df)]
+  final_df <- df[,1:3]
+  final_df$treat <- treat
+  final_df <- cbind(final_df, data.frame(logFC = df[["logFC"]]))
+  final_df$strand <- "+"
+  filtered_annotated_il1bil37_bed_list[[treat]] <- df
+  write.table(filtered_annotated_il1bil37_bed_list[[treat]],
+             here::here(paste0("./Results/DIR/filtered_annotated_il1bil37_", treat, ".bed")), sep = " ", col.names = FALSE, row.names = FALSE, quote = FALSE)
+}
+remove(df)
+
 ```
