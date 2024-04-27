@@ -264,9 +264,9 @@ for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
   final_df$treat <- treat
   final_df <- cbind(final_df, data.frame(logFC = df[["logFC"]]))
   final_df$strand <- "+"
-  filtered_annotated_il1bil37_bed_list[[treat]] <- df
+  filtered_annotated_il1bil37_bed_list[[treat]] <- final_df
   write.table(filtered_annotated_il1bil37_bed_list[[treat]],
-             here::here(paste0("./Results/DIR/filtered_annotated_il1bil37_", treat, ".bed")), sep = " ", col.names = FALSE, row.names = FALSE, quote = FALSE)
+             here::here(paste0("./Results/DIR/filtered_annotated_il1bil37_", treat, ".bed")), sep = "\t", col.names = FALSE, row.names = FALSE, quote = FALSE)
 }
 remove(df)
 
