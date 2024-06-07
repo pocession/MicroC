@@ -4,9 +4,11 @@
 \alias{.get_annotated_gr}
 \title{.get_annotated_gr}
 \usage{
-.get_annotated_gr(df)
+.get_annotated_gr(df, col_names)
 }
 \arguments{
+\item{col_names}{a character vector specifying the column names of return dataframe}
+
 \item{input}{a character string specifying the input dataframe}
 }
 \value{
@@ -18,7 +20,8 @@ This function annotate differentially-interacted regions (DIRs) with given genom
 \examples{
 \dontrun{
 df <- .get_annotated_gr(
-df = input_df
+df = input_df,
+col_names = col_names
 )
 }
 }

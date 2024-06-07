@@ -16,16 +16,16 @@
 #'
 #' @importFrom here here
 #' @importFrom assertthat assert_that
-#' @importFrom tidyr separate
-#' @importFrom TxDb.Hsapiens.UCSC.hg38.knownGene
-#' @importFrom org.Hs.eg.db
-#' @importFrom GenomicRanges
-#' @importFrom AnnotationDbi select
+#' @importFrom tidyr separate#' 
+#' @importFrom dplyr select filter left_join
+#' @importFrom annotatr annotate_regions build_annotations
+#' @importFrom GenomicRanges GRanges
+#' @importFrom IRanges IRanges
 #'
 #' @examples
 #' \dontrun{
 #' df <- annotateDIR(
-#' input = here::here("./Results/DIR/DIR_44112_A_bg_43615_mc6contact_map_extracted.csv"),
+#' input = here::here("./Results/DIR/bg.csv"),
 #' output = NULL
 #' )
 #' }
@@ -66,23 +66,27 @@ annotateDIR <- function(input, output) {
   }
   
   
-  # Assign the hg38 objects ----------------------------------------------------
-  .GlobalEnv$txdb <- TxDb.Hsapiens.UCSC.hg38.knownGene
-  hgdb <- org.Hs.eg.db
-  
-  # Extract TSS positions ------------------------------------------------------
-  tss <- transcripts(txdb, columns=c("tx_id", "gene_id"), use.names=TRUE)
-  tss <- resize(tss, width=1, fix='start')
-  tss_df <- as.data.frame(tss, row.names = NULL)
-  tss_df$transcript <- row.names(tss_df)
-  colnames(tss_df) <- c("tx_chr","tx_start","tx_end","tx_width","tx_strand","tx_id","gene_id","transcript")
-  
   # Read DIRs ------------------------------------------------------------------
   input_df <- read.csv(input)
   input_df <- input_df[,2:ncol(input_df)]
+  input_df <- input_df |>
+    dplyr::mutate(id = paste0(region1, "-", region2)) |>
+    dplyr::mutate(strand = "*") |>
+    dplyr::select(id, chr, region1, region2, strand, logFC, logCPM, PValue)
+  colnames(input_df) <- c("id", "chr", "start", "end", "strand", "logFC", "logCPM", "PValue")
+  col_names <- c("chr", "start", "end", "strand")
   
-  annotated_df <- .get_annotated_gr(input_df)
-  write.csv(annotated_df, output)
+  annotated_df <- .get_annotated_gr(input_df, col_names)
+  
+  ## Annotation containing multiple exons or introns are not required
+  annotated_df <- annotated_df |>
+    dplyr::distinct(id, .keep_all = TRUE) |>
+    dplyr::select(-c(chr, start,end,strand))
+  
+  final_df <- input_df |>
+    dplyr::left_join(annotated_df, by = "id")
+  
+  write.csv(final_df, output)
   message("Done! The output is written in: ", output)
   return(annotated_df)
 }
@@ -96,160 +100,69 @@ annotateDIR <- function(input, output) {
 #' @author Tsunghan Hsieh
 #'
 #' @param input a character string specifying the input dataframe
+#' @param col_names a character vector specifying the column names of return dataframe
 #' @return a dataframe of annotated file
 #' @examples
 #' \dontrun{
 #' df <- .get_annotated_gr(
-#' df = input_df
+#' df = input_df,
+#' col_names = col_names
 #' )
 #' }
-.get_annotated_gr <- function(df) {
+.get_annotated_gr <- function(df, col_names) {
   
-  # Check colnames -------------------------------------------------------------\
-  essential_col <- c("chr", "region1", "region2")
-  for (i in 1:length(essential_col)) {
-    if (!essential_col[i] %in% colnames(df)) {
-      message("Please make sure you have the following column: ", essential_col[i])
-      return (0)
-    } 
-  }
-  remove(essential_col, i)
-  
+  # Check colnames -------------------------------------------------------------
   ## Filter out non-standard chr
   wanted <- paste0("chr", seq(1:23))
   wanted <- c(wanted, "chrX", "chrY")
   df <- df |>
-    dplyr::filter(chr %in% wanted) |>
-    dplyr::mutate(region1 = as.numeric(region1),
-                  region2 = as.numeric(region2)) |>
-    dplyr::mutate(ix_id = paste0(chr, "_", region1, "_", region2))
-  
-  # Annotate the region1 and region2 seperately --------------------------------
-  ## For creating GRange objects
-  ## The ix_id column is used as the identity column
-  
-  df1 <- df |>
-    dplyr::select(chr, region1, ix_id) |>
-    dplyr::mutate(start = region1,
-                  end = region1+1)
-  
-  df2 <- df |>
-    dplyr::select(chr, region2, ix_id) |>
-    dplyr::mutate(start = region2,
-                  end = region2+1)
-
+    dplyr::filter(chr %in% wanted)
   
   # Create GRange objects ------------------------------------------------------
-  gr1 <- GRanges(
-    seqnames = df1$chr,
-    ranges = IRanges(start = df1$start, end = df1$end),
-    ix_id = df1$ix_id
+  ## For creating GRange objects
+  ## The id column is used as the identity column
+  
+  gr <- GenomicRanges::GRanges(
+    seqnames = df$chr,
+    ranges = IRanges::IRanges(start = df$start, end = df$end, strand = df$strand),
+    id = df$id
   )
   
-  gr2 <- GRanges(
-    seqnames = df2$chr,
-    ranges = IRanges(start = df2$start, end = df2$end),
-    ix_id = df2$ix_id
-  )
+  # Annotate -------------------------------------------------------------------
+  ## Select annotations for intersection with regions
+  ## Note inclusion of custom annotation, and use of shortcuts
+  annots <- c('hg38_basicgenes')
   
-  # Finding overlap ------------------------------------------------------------
-  features <- transcripts(txdb)
+  ## Build the annotations (a single GRanges object)
+  annotations <- annotatr::build_annotations(genome = 'hg38', annotations = annots)
   
-  # Select the id of closet genes ----------------------------------------------
-  ## nearest from peak start
-  ps.idx1 <- follow(gr1, features)
-  ps.idx2 <- follow(gr2, features)
+  df_annotated <- annotatr::annotate_regions(
+    regions = gr,
+    annotations = annotations,
+    ignore.strand = TRUE,
+    quiet = TRUE)
   
-  ## nearest from peak end
-  pe.idx1 <- precede(gr1, features)
-  pe.idx2 <- precede(gr2, features)
+  df_annotated <- data.frame(df_annotated)
   
-  ## check if any peak not matched to the nearest gene
-  na.idx1 <- is.na(ps.idx1) & is.na(pe.idx1)
-  na.idx2 <- is.na(ps.idx2) & is.na(pe.idx2)
+  df_annotated <- df_annotated |>
+    dplyr::select(-c(strand))
   
-  ## Remove na 
-  if (sum(na.idx1) > 0) { ## suggested by Thomas Schwarzl
-    ps.idx1 <- ps.idx1[!na.idx1]
-    pe.idx1 <- pe.idx1[!na.idx1]
-    gr1 <- gr1[!na.idx1]
-  }
+  ## Add the strand information back
+  df_strand <- df |>
+    dplyr::select(id, strand)
   
-  if (sum(na.idx2) > 0) { ## suggested by Thomas Schwarzl
-    ps.idx2 <- ps.idx2[!na.idx2]
-    pe.idx2 <- pe.idx2[!na.idx2]
-    gr2 <- gr2[!na.idx2]
-  }
+  df_annotated <- df_annotated |>
+    dplyr::left_join(df_strand, by = "id")
   
   # Generate the final data frame ----------------------------------------------
-  ## Identify the closet gene information
-  features_df1 <- data.frame(txStart1 = start(features[ps.idx1]),
-                            txEnd1 = end(features[pe.idx1]),
-                            txStrand1 = strand(features[ps.idx1]),
-                            tx_id1 = features[ps.idx1]$tx_id,
-                            tx_name1 = features[ps.idx1]$tx_name)
+  final_data <- df_annotated |>
+    dplyr::select(id, seqnames, start, end, strand)
   
-  features_df2 <- data.frame(txStart2 = start(features[ps.idx2]),
-                             txEnd2 = end(features[pe.idx2]),
-                             txStrand2 = strand(features[ps.idx2]),
-                             tx_id2 = features[ps.idx2]$tx_id,
-                             tx_name2 = features[ps.idx2]$tx_name)
+  df_annotated <- df_annotated |>
+    dplyr::select(-c(id, strand))
   
-  features_df1 <- features_df1 |> 
-    dplyr::mutate(distanceToTSS1 = ifelse(txStrand1 == "+", txEnd1 - txStart1, txStart1 - txEnd1))
+  colnames(final_data) <- c("id", col_names)
+  final_data <- cbind(final_data, df_annotated[,5:ncol(df_annotated)])
   
-  features_df2 <- features_df2 |> 
-    dplyr::mutate(distanceToTSS2 = ifelse(txStrand2 == "+", txEnd2 - txStart2, txStart2 - txEnd2))
-  
-  gr_df1 <- as.data.frame(gr1)
-  annotated_df1 <- cbind(gr_df1, features_df1)
-  annotated_df1 <- annotated_df1[,6:ncol(annotated_df1)]
-  
-  gr_df2 <- as.data.frame(gr2)
-  annotated_df2 <- cbind(gr_df2, features_df2)
-  annotated_df2 <- annotated_df2[,6:ncol(annotated_df2)]
-  
-  
-  ## map to the gene ids and symbols
-  mapped_genes1 <- AnnotationDbi::select(txdb, 
-                                         keys = annotated_df1$tx_name, 
-                                         keytype = "TXNAME", 
-                                         columns = c("GENEID"))
-  
-  mapped_symbols1 <- AnnotationDbi::select(org.Hs.eg.db, 
-                                           keys = mapped_genes1$GENEID,
-                                           columns = "SYMBOL", 
-                                           keytype = "ENTREZID")
-  
-  ## map to the gene ids and symbols
-  mapped_genes2 <- AnnotationDbi::select(txdb, 
-                                         keys = annotated_df2$tx_name, 
-                                         keytype = "TXNAME", 
-                                         columns = c("GENEID"))
-  
-  mapped_symbols2 <- AnnotationDbi::select(org.Hs.eg.db, 
-                                           keys = mapped_genes2$GENEID,
-                                           columns = "SYMBOL", 
-                                           keytype = "ENTREZID")
-  
-  annotated_df1 <- cbind(annotated_df1, mapped_genes1, mapped_symbols1)
-  annotated_df1 <- annotated_df1 |>
-    dplyr::mutate(gene_id1 = GENEID,
-                  symbol_1 = SYMBOL) |>
-    dplyr::select(-c(TXNAME, GENEID, SYMBOL, ENTREZID))
-  
-  annotated_df2 <- cbind(annotated_df2, mapped_genes2, mapped_symbols2)
-  annotated_df2 <- annotated_df2 |>
-    dplyr::mutate(gene_id2 = GENEID,
-                  symbol_2 = SYMBOL) |>
-    dplyr::select(-c(TXNAME, GENEID, SYMBOL, ENTREZID))
-  
-  annotated_df <- annotated_df1 |>
-    dplyr::left_join(annotated_df2, by = "ix_id")
-  
-  final_df <- df |>
-    dplyr::left_join(annotated_df, by = "ix_id") |>
-    dplyr::select(-c(ix_id))
-  
-  return(final_df)
+  return(final_data)
 }

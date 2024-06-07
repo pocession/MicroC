@@ -21,67 +21,27 @@ devtools::document()
 devtools::load_all()
 ```
 
-# Library
-***
-```{r library}
-library(edgeR)
-library(TxDb.Hsapiens.UCSC.hg38.knownGene)
-library(org.Hs.eg.db)
-library(GenomicRanges)
-library(GenomicFeatures)
-library(AnnotationDbi)
-```
-
-# Set path
-***
-
-```{r path}
-inputDir <- here::here("./Results/processing")
-outputDir <- here::here("./Results/DIR")
-```
-
 # TODO
 ***
 ```{python todo}
-# Before running this document, please run the following python script to subset hic data 
-# and generate the position index file
-# Example
-# python ./Python/subset_hic_data.py --inputDir /data/44111_A_ctrl_43614_mc5contact_map.hic --outputDir /Results/processing/ --rowChr chr2 --columnChr chr2 --rowStart 112735986 --rowEnd 113204585 --columnStart 112735986 --columnEnd 113204585 --res 5000
-```
-
-# Read the input file
-*** 
-
-```{r input}
-hicfiles <- list.files(path = inputDir, pattern = "_map_extracted\\.csv$", full.names = TRUE)
-posfiles <- list.files(path = inputDir, pattern = "_map_PosIndex\\.txt$", full.names = TRUE)
+# Before running this document, please check the following jupyter notebook to subset hic data 
+# ./Python/subset_hic.ipynb --inputDir
 ```
 
 # Generate the DIR
 ***
-We will generate a series of DIR files. The first one is the differential analysis among cells from two healthy donors and this file will be used as a "black list" to filter out the individual-specific interacted regions. Other DIR files are human cells treated with microbial molecules vs untreated. Note we have no biological replicate for all experiment, therefore we assume biological covariance = 0.4 for the differential analysis.
+We will generate a series of DIR files. DIR files are human cells treated with microbial molecules vs untreated. Note we have no biological replicate for all experiment, therefore we assume biological covariance = 0.4 for the differential analysis.
 
 ## DIR dataframe
 ***
 
 ```{r DIR}
-## Healthy donors
-df_healthy <- GetDIRWithNoReplicate(
-chr = "chr2",
-treat = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_extracted.csv"),
-ctrl = here::here("./Results/processing/44113_C_ctrl_43616_mc7contact_map_extracted.csv"),
-bcv = 0.4,
-start_position_index = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_PosIndex.txt"),
-output = here::here("./Results/DIR/healthy.csv")
-)
-
 ## Stimulation
 df_bg <- GetDIRWithNoReplicate(
 chr = "chr2",
 treat = here::here("./Results/processing/44112_A_bg_43615_mc6contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bg.csv")
 )
 
@@ -90,7 +50,6 @@ chr = "chr2",
 treat = here::here("./Results/processing/44114_C_lps_43617_mc8contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/44113_C_ctrl_43616_mc7contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/44113_C_ctrl_43616_mc7contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/lps.csv")
 )
 
@@ -99,7 +58,6 @@ chr = "chr2",
 treat = here::here("./Results/processing/BCG_contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/DMSO_contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bcg.csv")
 )
 
@@ -108,7 +66,6 @@ chr = "chr2",
 treat = here::here("./Results/processing/LDHi_contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/DMSO_contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/ldhi.csv")
 )
 
@@ -117,7 +74,6 @@ chr = "chr2",
 treat = here::here("./Results/processing/BCGLDHi_contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/DMSO_contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bcgldhi.csv")
 )
 
@@ -128,7 +84,6 @@ chr = "chr2",
 treat = here::here("./Results/processing/BCGLDHi_contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/BCG_contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bcgldhi_bcg.csv")
 )
 
@@ -137,7 +92,6 @@ chr = "chr2",
 treat = here::here("./Results/processing/BCGLDHi_contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/LDHi_contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bcgldhi_ldhi.csv")
 )
 
@@ -146,7 +100,6 @@ chr = "chr2",
 treat = here::here("./Results/processing/BCG_contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/LDHi_contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/DMSO_contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bcg_ldhi.csv")
 )
 
@@ -156,16 +109,17 @@ chr = "chr2",
 treat = here::here("./Results/processing/44112_A_bg_43615_mc6contact_map_extracted.csv"),
 ctrl = here::here("./Results/processing/44114_C_lps_43617_mc8contact_map_extracted.csv"),
 bcv = 0.4,
-start_position_index = here::here("./Results/processing/44111_A_ctrl_43614_mc5contact_map_PosIndex.txt"),
 output = here::here("./Results/DIR/bg_lps.csv")
 )
 
 ```
+
 ## Annotate the DIR
 ***
+
 ```{r annotation}
 annoted_df_list <- list()
-for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
+for (treat in c("bg", "lps", "bcg", "ldhi", "bcgldhi",
                 "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
   input = here::here(paste0("./Results/DIR/", treat, ".csv"))
   output = here::here(paste0("./Results/DIR/annotated_", treat, ".csv"))
@@ -176,28 +130,6 @@ for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
 }
 ```
 
-# (Optional) Filter out the individual-specific DIRs
-***
-
-```{r filter_blacklist}
-## looks like only a small fraction are individual-specific
-df_blacklist <- annoted_df_list[["healthy"]] |>
-  dplyr::filter(PValue < 0.1) |>
-  dplyr::mutate(ixid = paste0(region1, "-", region2))
-
-write.csv(df_blacklist, here::here("./Results/DIR/annotated_blacklist.csv"))
-
-filtered_annoted_df_list <- list()
-for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
-                "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
-  filtered_annoted_df_list[[treat]] <- annoted_df_list[[treat]] |>
-    dplyr::mutate(ixid = paste0(region1, "-", region2)) |>
-    dplyr::filter(!ixid %in% df_blacklist$ixid)
-  write.csv(filtered_annoted_df_list[[treat]],
-            here::here(paste0("./Results/DIR/filtered_annotated_", treat, ".csv")))
-}
-
-```
 
 # Identify DIRs
 ***
@@ -242,7 +174,7 @@ il37_upstream <- 112911165 - 5000
 il37_downstream <- 112918882 + 5000
 filtered_annotated_il1bil37_df_list <- list()
 
-## filtered out by black list does not chane the result
+## filtered out by black list does not change the result
 for (treat in c("healthy", "bg", "lps", "bcg", "ldhi", "bcgldhi",
                 "bcgldhi_bcg", "bcgldhi_ldhi", "bcg_ldhi", "bg_lps")) {
   filtered_annotated_il1bil37_df_list[[treat]] <- filtered_annoted_df_list[[treat]] |>

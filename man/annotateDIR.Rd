@@ -23,7 +23,7 @@ This function reads differentially-interacted regions (DIRs) and annotate with h
 \examples{
 \dontrun{
 df <- annotateDIR(
-input = here::here("./Results/DIR/DIR_44112_A_bg_43615_mc6contact_map_extracted.csv"),
+input = here::here("./Results/DIR/bg.csv"),
 output = NULL
 )
 }

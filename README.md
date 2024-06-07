@@ -26,14 +26,10 @@ We have developed a pipeline that identifies the differentially-interacted regio
 ![workflow](./workflow.png)
 
 ## Usage of our homebrew tools in this repository
-We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. Then navigate to this folder and you are ready to use Python functions. To use R functions, please open this folder as a project in your R studio and load all functions in your R environment.
+We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. 
 
-```
-## Use Python functions
-## In linux environment
-unzip MicroC.zip -d path-to-this-folder
-cd path-to-this-folder
-```
+- Please refer to this [Jupyter Notebook](./Python/subset_hic.ipynb) for subsetting hic data. 
+- Please refer to this [Rmd file](./Doc/Il1B_DIR_identification.Rmd) for identifying differentially-interacted regions (DIRs).
 
 ```
 ## Use R functions
@@ -52,12 +48,7 @@ library(AnnotationDbi)
 
 Example commands for our homebrew tools:
 
-- [subset_hic_data.py](./Python/subset_hic_data.py): This function helps to subset the interested regions from hic file and generate the position index for further downstream analysis. Note the position index is the mid-point of the genomic regions. For example, if there is a interaction between two genomic regions: 11000-16000 and 18000-23000, then the index will be 13500 - 20500.
-
-```
-## Example
-python ./Python/subset_hic_data.py --inputDir /data/44111_A_ctrl_43614_mc5contact_map.hic --outputDir /Results/processing/ --rowChr chr2 --columnChr chr2 --rowStart 112735986 --rowEnd 113204585 --columnStart 112735986 --columnEnd 113204585 --res 5000
-```
+- [subset_hic_data_v2.py](./Python/subset_hic_data_v2.py): This function helps to subset the interested regions from hic file and generate the position index for further downstream analysis. Please refer to this [tutorial](./Python/subset_hic_tutorial.ipynb) for more information. 
 
 - [getInteractionPosIndex.R](./R/getInteractionPosIndex.R): This function is an independent R function for generating the interaction position index.
 
