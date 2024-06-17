@@ -92,17 +92,17 @@ GetDIRWithNoReplicate <- function(chr, treat, ctrl, bcv, output) {
   }
   
   # Read and process interaction matrix  ---------------------------------------
-  treat_df <- .generateInteractionMatrixCount(treat)
-  ctrl_df <- .generateInteractionMatrixCount(ctrl)
+  treat_df <- .generateInteractionMatrixCount(treat, "treat")
+  ctrl_df <- .generateInteractionMatrixCount(ctrl, "ctrl")
   
   # Combine the dataframe ------------------------------------------------------
   combine_df <- treat_df |>
     dplyr::inner_join(ctrl_df, by = "ixid")
   
-  # Filter data based on abundance
+  # Filter data based on abundance ---------------------------------------------
   ## Filter the last 5% interactions
   combine_df <- combine_df |>
-    dplyr::mutate(avgCPM = log2(counts.x * counts.y))
+    dplyr::mutate(avgCPM = log2(counts_treat * counts_ctrl))
   
   # Calculate the 5th percentile (least 5% value) of the avg column
   least_5_percent_value <- quantile(combine_df$avgCPM, 0.05)
@@ -113,11 +113,12 @@ GetDIRWithNoReplicate <- function(chr, treat, ctrl, bcv, output) {
   
   # Perform differential analysis ----------------------------------------------
   ## Generate counts df for differential analysis
+  ## Note if the comparison is treat vs ctrl, 
+  ## in edgeR it should be written as group = ctrl:treat
   counts_df <- combine_df |>
-    dplyr::select(counts.x, counts.y)
+    dplyr::select(counts_treat, counts_ctrl)
   rownames(counts_df) <- combine_df$ixid
-  colnames(counts_df) <- c("treat", "ctrl")
-  dir_df <- edgeR::DGEList(counts=counts_df, group=1:2)
+  dir_df <- edgeR::DGEList(counts=counts_df, group=2:1) # treat vs ctrl
   
   et <- edgeR::exactTest(dir_df, dispersion=bcv^2)
   et <- as.data.frame(et)
@@ -145,15 +146,21 @@ GetDIRWithNoReplicate <- function(chr, treat, ctrl, bcv, output) {
 #' Get the interaction count dataframe
 #' @param file a character specifying the input file
 #' The inputfile is a interaction matrix
+#' @param sample a character specifying the sample type, i.e. treat or control
 #' @return a dataframe containing the interaction index and count
 #'  
-.generateInteractionMatrixCount <- function(file) {
+.generateInteractionMatrixCount <- function(file, sample) {
   df <- read.csv(file)
   df <- df |>
     dplyr::mutate(ixid = paste0(region1, "-", region2)) |>
     dplyr::mutate(self = ifelse((region2-region1 == 0), TRUE, FALSE)) |>
     dplyr::filter(self != TRUE) |>
     dplyr::select(ixid, region1, region2, counts)
+  
+  ## Change the column names 
+  for (i in 2:ncol(df)) {
+    colnames(df)[i] <- paste0(colnames(df)[i], "_", sample)
+  }
   
   return(df)
 }

@@ -4,11 +4,13 @@
 \alias{.generateInteractionMatrixCount}
 \title{.generateInteractionMatrixCount}
 \usage{
-.generateInteractionMatrixCount(file)
+.generateInteractionMatrixCount(file, sample)
 }
 \arguments{
 \item{file}{a character specifying the input file
 The inputfile is a interaction matrix}
+
+\item{sample}{a character specifying the sample type, i.e. treat or control}
 }
 \value{
 a dataframe containing the interaction index and count
