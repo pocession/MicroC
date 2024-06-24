@@ -21,9 +21,7 @@ For a step-by-step guide, please refer to [Dovetail analsyis documents](https://
 In [our bash repository](./Bash), you can find example bash scripts for the pre-processing step in high-performance computation (HPC) cluster.
 
 ## Analysis pipeline
-We have developed a pipeline that identifies the differentially-interacted regions (DIRs) between two samples. As microC is an expensive assay, we don't do biological repeat for each condition. Instead, we set the biological covariance (BCV) as 0.4 to get the DIRs. Moreover, we also leverage our healthy donor data to generate a "black list". You could choose to remove DIRs in black list from experiments to get a more validated DIRs set. For more details, please see [this file](./Doc/Il1B_DIR_identification.Rmd).
-
-![workflow](./workflow.png)
+We have developed a pipeline that identifies the differentially-interacted regions (DIRs) between two samples. As microC is an expensive assay, we don't do biological repeat for each condition. Instead, we set the biological covariance (BCV) as 0.4 to get the DIRs. We removed interactions with very low abudance (the last 5%) when performing the differential analysis. For more details, please see [this file](./Doc/Il1B_DIR_identification.Rmd).
 
 ## Usage of our homebrew tools in this repository
 We have developed several Python and R functions for further processing microC data and the downstream analysis. To use those functions, the easiest way is to download this repoitory and unzip it. 
@@ -49,19 +47,6 @@ library(AnnotationDbi)
 Example commands for our homebrew tools:
 
 - [subset_hic_data_v2.py](./Python/subset_hic_data_v2.py): This function helps to subset the interested regions from hic file and generate the position index for further downstream analysis. Please refer to this [tutorial](./Python/subset_hic_tutorial.ipynb) for more information. 
-
-- [getInteractionPosIndex.R](./R/getInteractionPosIndex.R): This function is an independent R function for generating the interaction position index.
-
-```
-## Example:
-df <- getInteractionPosIndex(
-chr = "chr2",
-start = 112735986,
-end = 113204585,
-res = 5000,
-output = here::here("./Results/processing/start_position_index.txt")
-)
-```
 
 - [getDIRWithNoReplicate.R](./R/getDIRWithNoReplicate.R): After running subset_hic_data.py, run this function to read interaction counts and perform differential analysis between two conditions. Please note this function is specifically for experiments with no biological replicate, so the result has no statistical significance. Please treat the log2 fold change and p value as descriptive values.
 
